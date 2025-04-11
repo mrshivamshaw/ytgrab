@@ -1338,10 +1338,10 @@ def get_lang():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     url = request.form.get('url') if request.method == 'POST' else request.args.get('url')
-    formats = None
+    formats = []
     thumbnail = None
     title = None
-    start_time = time.time()
+    error = None
 
     if url:
         ydl_opts = {
@@ -1349,47 +1349,84 @@ def index():
             'no_warnings': True,
             'extract_flat': 'in_playlist',
             'timeout': 10,
+            'nocheckcertificate': True,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            },
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
-                formats = info.get('formats', [])
                 thumbnail = info.get('thumbnail')
                 title = info.get('title')
                 
-                # Filter formats to show only what we support
-                supported_formats = []
+                # Standard format definitions
+                format_definitions = [
+                    {'id': '360', 'name': '360p MP4', 'max_height': 360, 'vcodec': 'avc1'},
+                    {'id': '480', 'name': '480p MP4', 'max_height': 480, 'vcodec': 'avc1'},
+                    {'id': '720', 'name': '720p MP4', 'max_height': 720, 'vcodec': 'avc1'},
+                    {'id': 'best', 'name': 'Best Quality', 'max_height': None, 'vcodec': None},
+                    {'id': '140', 'name': 'MP3 Audio', 'audio_only': True}
+                ]
                 
-                # Add MP3 audio option
-                audio_format = next((f for f in formats if f.get('format_id') == '140'), None)
-                if audio_format:
-                    audio_format['display_name'] = 'MP3 Audio'
-                    audio_format['download_format'] = 'mp3'
-                    supported_formats.append(audio_format)
+                available_formats = info.get('formats', [])
                 
-                # For MP4 videos - add 360p, 480p, and 720p formats if available
-                target_resolutions = {
-                    '360p': ['18'], # format_id for 360p
-                    '480p': ['135', '244'], # possible format_ids for 480p
-                    '720p': ['22', '136', '247'] # possible format_ids for 720p
-                }
+                for fmt_def in format_definitions:
+                    if fmt_def.get('audio_only'):
+                        # Handle audio format
+                        audio_format = next(
+                            (f for f in available_formats if f.get('format_id') == '140'), 
+                            None
+                        )
+                        if audio_format:
+                            formats.append({
+                                'format_id': '140',
+                                'display_name': 'MP3 Audio',
+                                'download_format': 'mp3',
+                                'filesize': audio_format.get('filesize') or audio_format.get('filesize_approx'),
+                                'height': 'Audio'
+                            })
+                    else:
+                        # Handle video formats
+                        matching_formats = []
+                        for f in available_formats:
+                            # Skip formats without height or video codec
+                            if f.get('height') is None or f.get('vcodec') is None:
+                                continue
+                            
+                            # Check if format matches our criteria
+                            height_ok = (fmt_def['max_height'] is None) or (f.get('height', 0) <= fmt_def['max_height'])
+                            vcodec_ok = (fmt_def['vcodec'] is None) or (f.get('vcodec', '').startswith(fmt_def['vcodec']))
+                            ext_ok = f.get('ext') == 'mp4'
+                            has_audio = f.get('acodec') != 'none'
+                            
+                            if height_ok and vcodec_ok and ext_ok and has_audio:
+                                matching_formats.append(f)
+                        
+                        if matching_formats:
+                            # Get the best quality match
+                            best_format = max(matching_formats, key=lambda x: x.get('tbr', 0))
+                            formats.append({
+                                'format_id': fmt_def['id'],
+                                'display_name': fmt_def['name'],
+                                'download_format': 'mp4',
+                                'filesize': best_format.get('filesize') or best_format.get('filesize_approx'),
+                                'height': best_format.get('height')
+                            })
                 
-                for resolution, format_ids in target_resolutions.items():
-                    for format_id in format_ids:
-                        video_format = next((f for f in formats if f.get('format_id') == format_id), None)
-                        if video_format:
-                            video_format['display_name'] = f'{resolution} MP4'
-                            video_format['download_format'] = 'mp4'
-                            supported_formats.append(video_format)
-                            break  # Only use the first matching format_id for this resolution
-                
-                formats = supported_formats
-                logger.info(f"Processing time: {time.time() - start_time} seconds")
         except Exception as e:
-            logger.error(f"Error processing URL: {e}")
-            return render_template('index.html', error=translations[get_lang()]['error'] + ': ' + str(e), url=url, lang=get_lang(), translations=translations)
+            error = str(e)
+            logger.error(f"Error processing URL: {error}")
 
-    return render_template('index.html', formats=formats, url=url, thumbnail=thumbnail, title=title, lang=get_lang(), translations=translations)
+    return render_template('index.html',
+                         formats=formats,
+                         url=url,
+                         thumbnail=thumbnail,
+                         title=title,
+                         error=error,
+                         lang=get_lang(),
+                         translations=translations)
+
 
 @app.route('/set_language/<language>')
 def set_language(language):
@@ -1402,33 +1439,49 @@ def download(format_id):
     url = request.args.get('url')
     if not url:
         return "No URL provided", 400
-    
     import tempfile
     import platform
     import io
+    import random
+    import shutil
     
-    # Create a temporary directory
+    
     temp_dir = tempfile.mkdtemp()
-    
-    class YTLogger:
-        def debug(self, msg):
-            pass
-        def warning(self, msg):
-            logger.warning(msg)
-        def error(self, msg):
-            logger.error(msg)
-    
+    logger.info(f"Created temp directory: {temp_dir}")
+
     try:
-        # Determine if this is an audio-only download
+        user_agent = random.choice([
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        ])
+        logger.info(f"Using user agent: {user_agent}")
+
         is_audio = format_id == '140'
+        
+        # Format definitions must match the index route
+        format_definitions = {
+            '360': {'max_height': 360, 'vcodec': 'avc1'},
+            '480': {'max_height': 480, 'vcodec': 'avc1'},
+            '720': {'max_height': 720, 'vcodec': 'avc1'},
+            'best': {'max_height': None, 'vcodec': None},
+            '140': {'audio_only': True}
+        }
+        
+        fmt_def = format_definitions.get(format_id, format_definitions['720'])
         
         ydl_opts = {
             'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
-            'logger': YTLogger(),
+            'quiet': False,
+            'no_warnings': False,
+            'retries': 10,
+            'fragment_retries': 10,
+            'extractor_retries': 3,
+            'socket_timeout': 30,
+            'nocheckcertificate': True,
+            'http_headers': {'User-Agent': user_agent},
         }
-        
+
         if is_audio:
-            # Audio download options
             ydl_opts.update({
                 'format': 'bestaudio/best',
                 'postprocessors': [{
@@ -1438,89 +1491,76 @@ def download(format_id):
                 }],
             })
         else:
-            # Video download options
+            # Build format query safely
+            format_query = []
+            if fmt_def['max_height'] is not None:
+                format_query.append(f"height<={fmt_def['max_height']}")
+            if fmt_def['vcodec'] is not None:
+                format_query.append(f"vcodec^={fmt_def['vcodec']}")
+            
+            format_query.append('ext=mp4')
+            
             ydl_opts.update({
-                'format': f'{format_id}+bestaudio',  # Combine video and audio streams
+                'format': '+'.join(format_query) + '+bestaudio[ext=m4a]/best',
                 'merge_output_format': 'mp4',
+                'postprocessors': [{
+                    'key': 'FFmpegVideoConvertor',
+                    'preferedformat': 'mp4',
+                }],
             })
 
-        # Download the file to the temporary directory
+        # Rest of the download function remains the same...
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            logger.info(f"Starting download with options: {ydl_opts}")
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info)
             
-            # For audio downloads, the filename will be .mp3
             if is_audio:
-                base, _ = os.path.splitext(filename)
-                file_path = f"{base}.mp3"
+                file_path = os.path.splitext(filename)[0] + '.mp3'
             else:
-                # For video, ensure it's .mp4
-                base, ext = os.path.splitext(filename)
-                file_path = f"{base}.mp4"
-                
-                # If the file doesn't exist with .mp4 extension, try the original filename
-                if not os.path.exists(file_path) and os.path.exists(filename):
-                    file_path = filename
-            
-            # Make sure the file exists
+                file_path = os.path.splitext(filename)[0] + '.mp4'
+                if not os.path.exists(file_path):
+                    file_path = filename  # Fallback
+
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"Downloaded file not found: {file_path}")
             
-            # Get just the filename without the path for the download
-            download_name = os.path.basename(file_path)
-            
-            # Special handling for Windows to avoid file locking issues
+            file_size = os.path.getsize(file_path)
+            logger.info(f"Downloaded {file_path} ({file_size} bytes)")
+
             if platform.system() == 'Windows':
-                # Read the file into memory before sending
                 with open(file_path, 'rb') as f:
                     file_data = io.BytesIO(f.read())
-                
-                # Cleanup the temp directory after reading the file
-                import shutil
+                response = send_file(
+                    file_data,
+                    as_attachment=True,
+                    download_name=os.path.basename(file_path),
+                    mimetype='audio/mp3' if is_audio else 'video/mp4'
+                )
+            else:
+                response = send_file(
+                    file_path,
+                    as_attachment=True,
+                    download_name=os.path.basename(file_path),
+                    mimetype='audio/mp3' if is_audio else 'video/mp4'
+                )
+            
+            @response.call_on_close
+            def cleanup():
                 try:
                     shutil.rmtree(temp_dir)
                 except Exception as e:
-                    logger.warning(f"Could not clean up temp directory: {e}")
-                
-                # Send the file from memory
-                file_data.seek(0)
-                return send_file(
-                    file_data,
-                    as_attachment=True,
-                    download_name=download_name,
-                    mimetype='video/mp4' if not is_audio else 'audio/mp3'
-                )
-            else:
-                # For non-Windows platforms, we can use the standard approach
-                # The file will be deleted by the caller
-                response = send_file(
-                    file_path, 
-                    as_attachment=True,
-                    download_name=download_name
-                )
-                
-                # Register a callback to clean up after sending
-                @response.call_on_close
-                def cleanup():
-                    try:
-                        import shutil
-                        shutil.rmtree(temp_dir)
-                    except Exception as e:
-                        logger.warning(f"Could not clean up temp directory: {e}")
-                
-                return response
+                    logger.warning(f"Cleanup failed: {e}")
+            
+            return response
             
     except Exception as e:
-        # Cleanup on error
+        logger.error(f"Download failed: {e}")
         try:
-            import shutil
             shutil.rmtree(temp_dir)
         except:
             pass
-        
-        logger.error(f"Download failed: {e}")
         return f"Download failed: {str(e)}", 500
+
     
 if __name__ == '__main__':
     if not os.path.exists('downloads'):

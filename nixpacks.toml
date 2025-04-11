@@ -3,43 +3,33 @@ nixPkgs = [
   "ffmpeg", 
   "python313", 
   "python313Packages.pip", 
-  "python313Packages.virtualenv",
-  "glibcLocales"  # Add locale support
+  "python313Packages.virtualenv"
 ]
 
 [phases.install]
 cmds = [
-  # Set locale
-  "export LOCALE_ARCHIVE=/usr/lib/locale/locale-archive",
-  "export LANG=en_US.UTF-8",
-  "export LC_ALL=en_US.UTF-8",
-  
-  # Create and activate virtual environment
-  "python -m venv venv",
-  ". venv/bin/activate",
-  ". venv/bin/activate && pip install --upgrade pip setuptools wheel",
-  ". venv/bin/activate && pip install -r requirements.txt"
+  # Create and activate virtual environment more efficiently
+  "python -m venv venv --without-pip",
+  "curl -s https://bootstrap.pypa.io/get-pip.py | venv/bin/python",
+  "venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel",
+  "venv/bin/pip install --no-cache-dir -r requirements.txt"
 ]
 
 [phases.build]
-cmds = [
-  ". venv/bin/activate",
-  # Skip compilation to avoid potential issues
-  "echo 'Build phase completed'"
-]
+# Skip the build phase entirely since we don't need it
+cmds = []
 
 [start]
-cmd = ". venv/bin/activate && python app.py"
+cmd = "venv/bin/python app.py"
 
 [env]
 PYTHONUNBUFFERED = "1"
 PYTHONPATH = "/app"
 FLASK_APP = "app.py"
 FLASK_ENV = "production"
-# Set locale environment variables
+# Only set critical environment variables
 LANG = "en_US.UTF-8"
-LC_ALL = "en_US.UTF-8"
 
-# Use nixos-23.11 channel which should have better support
+# Use a faster channel
 [nixpkgs]
 channel = "nixos-23.11"
