@@ -1,35 +1,20 @@
 [phases.setup]
 nixPkgs = [
   "ffmpeg", 
-  "python313", 
-  "python313Packages.pip", 
-  "python313Packages.virtualenv"
+  "python313",
 ]
 
 [phases.install]
 cmds = [
-  # Create and activate virtual environment more efficiently
-  "python -m venv venv --without-pip",
-  "curl -s https://bootstrap.pypa.io/get-pip.py | venv/bin/python",
-  "venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel",
-  "venv/bin/pip install --no-cache-dir -r requirements.txt"
+  "python3 -m venv venv",
+  "source venv/bin/activate && pip install --upgrade pip setuptools wheel",
+  "source venv/bin/activate && pip install --no-cache-dir -r requirements.txt",
 ]
 
-[phases.build]
-# Skip the build phase entirely since we don't need it
-cmds = []
-
 [start]
-cmd = "venv/bin/python app.py"
+cmd = "source venv/bin/activate && python app.py"
 
 [env]
 PYTHONUNBUFFERED = "1"
-PYTHONPATH = "/app"
 FLASK_APP = "app.py"
 FLASK_ENV = "production"
-# Only set critical environment variables
-LANG = "en_US.UTF-8"
-
-# Use a faster channel
-[nixpkgs]
-channel = "nixos-23.11"
