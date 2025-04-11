@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>{{ translations[lang]['title'] }}</title>
+    <meta name="theme-color" content="#ff00d6">
+    <meta property="og:image" content="/assets/img/youtube.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:description" content="{{ translations[lang]['description'] }}">
+    <meta name="description" content="{{ translations[lang]['description'] }}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:title" content="{{ translations[lang]['title'] }}">
+    <meta name="twitter:image" content="/assets/img/youtube.png">
+    <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="/assets/img/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icons/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="180x180" href="/assets/img/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icons/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/assets/img/icons/android-chrome-512x512.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/zephyr/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+    
+    <style>
+        .bg-primary { background: #1e40af !important; }
+        .text-primary { color: #1e40af !important; }
+        .section-main { background: #262261; margin: 0 auto; padding: 30px 20px 44px; }
+        .card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        input.form-control { padding: 1.2rem; border-radius: 0.5rem; border: 2px solid #e9ecef; }
+        .btn-primary { padding: 0.8rem 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1); }
+        .btn-primary:hover { box-shadow: 0 8px 12px rgba(0, 123, 255, 0.2); }
+        .search-form__input { border: none; color: var(--color-black); font-size: 18px; font-weight: 400; line-height: normal; padding: 0 14px; width: 100%; }
+        .format-list { margin-top: 20px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .format-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: #fff; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .format-name { font-weight: bold; font-size: 1.1em; }
+        .format-size { color: #666; }
+        .audio-btn { background: linear-gradient(108deg, #ff9800, #f57c00) !important; }
+        .audio-btn:hover { background: #f57c00 !important; }
+        
+        /* RTL support */
+        [dir="rtl"] .text-md-start { text-align: right !important; }
+        [dir="rtl"] .text-md-end { text-align: left !important; }
+        [dir="rtl"] .ms-auto { margin-right: auto !important; margin-left: unset !important; }
+        [dir="rtl"] .navbar-nav { flex-direction: row-reverse; }
+        [dir="rtl"] .dropdown-menu-end { right: auto; left: 0; }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="/static/img/logo/logo.jpg" alt="Logo" style="height: 35px;">
+                {{ translations[lang]['brand'] }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#faq">
+                            <i class="fas fa-question-circle"></i> {{ translations[lang]['faq'] }}
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="javascript:void(0)" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe"></i> {{ translations[lang]['language'] }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown" style="max-height: 300px; overflow-y: auto;">
+                            <li><a class="dropdown-item {% if lang == 'ar' %}active{% endif %}" href="/set_language/ar">العربية</a></li>
+                            <li><a class="dropdown-item {% if lang == 'bn' %}active{% endif %}" href="/set_language/bn">भोजपुरी</a></li>
+                            <li><a class="dropdown-item {% if lang == 'cs' %}active{% endif %}" href="/set_language/cs">Čeština</a></li>
+                            <li><a class="dropdown-item {% if lang == 'da' %}active{% endif %}" href="/set_language/da">Dansk</a></li>
+                            <li><a class="dropdown-item {% if lang == 'de' %}active{% endif %}" href="/set_language/de">Deutsch</a></li>
+                            <li><a class="dropdown-item {% if lang == 'el' %}active{% endif %}" href="/set_language/el">Ελληνικά</a></li>
+                            <li><a class="dropdown-item {% if lang == 'en' %}active{% endif %}" href="/set_language/en">English</a></li>
+                            <li><a class="dropdown-item {% if lang == 'es' %}active{% endif %}" href="/set_language/es">Español</a></li>
+                            <li><a class="dropdown-item {% if lang == 'fa' %}active{% endif %}" href="/set_language/fa">فارسی</a></li>
+                            <li><a class="dropdown-item {% if lang == 'fi' %}active{% endif %}" href="/set_language/fi">Suomi</a></li>
+                            <li><a class="dropdown-item {% if lang == 'fr' %}active{% endif %}" href="/set_language/fr">Français</a></li>
+                            <li><a class="dropdown-item {% if lang == 'hi' %}active{% endif %}" href="/set_language/hi">हिन्दी</a></li>
+                            <li><a class="dropdown-item {% if lang == 'hu' %}active{% endif %}" href="/set_language/hu">Magyar</a></li>
+                            <li><a class="dropdown-item {% if lang == 'id' %}active{% endif %}" href="/set_language/id">Bahasa Indonesia</a></li>
+                            <li><a class="dropdown-item {% if lang == 'it' %}active{% endif %}" href="/set_language/it">Italiano</a></li>
+                            <li><a class="dropdown-item {% if lang == 'ja' %}active{% endif %}" href="/set_language/ja">日本語</a></li>
+                            <li><a class="dropdown-item {% if lang == 'ko' %}active{% endif %}" href="/set_language/ko">한국어</a></li>
+                            <li><a class="dropdown-item {% if lang == 'nl' %}active{% endif %}" href="/set_language/nl">Nederlands</a></li>
+                            <li><a class="dropdown-item {% if lang == 'pl' %}active{% endif %}" href="/set_language/pl">Polski</a></li>
+                            <li><a class="dropdown-item {% if lang == 'pt' %}active{% endif %}" href="/set_language/pt">Português</a></li>
+                            <li><a class="dropdown-item {% if lang == 'ro' %}active{% endif %}" href="/set_language/ro">Română</a></li>
+                            <li><a class="dropdown-item {% if lang == 'ru' %}active{% endif %}" href="/set_language/ru">Русский</a></li>
+                            <li><a class="dropdown-item {% if lang == 'sk' %}active{% endif %}" href="/set_language/sk">Slovenčina</a></li>
+                            <li><a class="dropdown-item {% if lang == 'sr' %}active{% endif %}" href="/set_language/sr">Српски</a></li>
+                            <li><a class="dropdown-item {% if lang == 'sv' %}active{% endif %}" href="/set_language/sv">Svenska</a></li>
+                            <li><a class="dropdown-item {% if lang == 'th' %}active{% endif %}" href="/set_language/th">ไทย</a></li>
+                            <li><a class="dropdown-item {% if lang == 'tr' %}active{% endif %}" href="/set_language/tr">Türkçe</a></li>
+                            <li><a class="dropdown-item {% if lang == 'vi' %}active{% endif %}" href="/set_language/vi">Tiếng Việt</a></li>
+                            <li><a class="dropdown-item {% if lang == 'zh' %}active{% endif %}" href="/set_language/zh">中文</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <div class="section-main justify-content-center pt-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h1 class="display-4 fw-bold mb-4 text-white">
+                            {{ translations[lang]['title'] }} <br>
+                        </h1>
+                        <h3>
+                            <span class="text-white">
+                                {{ translations[lang]['subtitle'] }}
+                            </span>
+                        </h3>
+                        <div class="row justify-content-center mt-5">
+                            <div class="col-lg-12">
+                                <div class="row">
+                                    <div class="col col-12 d-flex justify-content-center">
+                                        {% if not formats %}
+                                            <form id="downloadForm" action="/" method="POST" class="container-fluid">
+                                                <div class="input-group p-2 bg-white rounded row">
+                                                    <input class="form-control form-control-lg col-sm-12 col-md-10" type="text" name="url" id="youtubeUrl" autocomplete="off" placeholder="{{ translations[lang]['placeholder'] }}" value="{{ url if url else '' }}">
+                                                    <button class="btn btn-primary text-lg col-sm-12 col-md-2" type="submit" style="background: linear-gradient(108deg, rgba(0, 158, 226, .9) -57.13%, #8b2fff 11.08%, rgba(245, 5, 79, .9) 102.57%); font-size: 1.2em; font-weight: bolder;">
+                                                        {{ translations[lang]['download_button'] }}
+                                                        <i class="fa fa-download"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="invalid-feedback" id="urlError"></div>
+
+                                                <div class="m-auto mt-4 mb-2 col d-flex justify-content-center col-12">
+                                                    <div id="loading" style="display: none;">
+                                                        <div class="spinner-border text-white" role="status">
+                                                            <span class="visually-hidden">Loading...</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        {% else %}
+                                            <div class="container-fluid">
+                                                <div class="mt-3 p-4 bg-white rounded" style="max-width: 800px; margin: 0 auto;">
+                                                    {% if thumbnail %}
+                                                        <div class="text-center mb-4">
+                                                            <img src="{{ thumbnail }}" alt="Video Thumbnail" class="img-fluid rounded" style="max-width: 320px;">
+                                                        </div>
+                                                    {% endif %}
+                                                    
+                                                    {% if title %}
+                                                        <h3 class="mb-4 text-center">{{ title }}</h3>
+                                                    {% endif %}
+                                                    
+                                                    <h4 class="mb-3">{{ translations[lang]['choose_format'] }}</h4>
+                                                    
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>{{ translations[lang]['format'] }}</th>
+                                                                    <th>{{ translations[lang]['size'] }}</th>
+                                                                    <th>{{ translations[lang]['download'] }}</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for format in formats %}
+                                                                    <tr>
+                                                                        <td>
+                                                                            {% if format.get('download_format') == 'mp3' %}
+                                                                                <i class="fa fa-music"></i>
+                                                                            {% else %}
+                                                                                <i class="fa fa-film"></i>
+                                                                            {% endif %}
+                                                                            {{ format.get('display_name', format.get('format_note', format.get('height', '') | string + 'p')) }}
+                                                                        </td>
+                                                                        <td>
+                                                                            {% if format.get('filesize_approx') %}
+                                                                                {{ '%0.2f MB' % (format.get('filesize_approx', 0) / 1024 / 1024) }}
+                                                                            {% elif format.get('filesize') %}
+                                                                                {{ '%0.2f MB' % (format.get('filesize', 0) / 1024 / 1024) }}
+                                                                            {% else %}
+                                                                                N/A
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td>
+                                                                            <a href="/download/{{ format['format_id'] }}?url={{ url }}" 
+                                                                               class="btn {% if format.get('download_format') == 'mp3' %}audio-btn{% else %}btn-primary{% endif %} btn-sm">
+                                                                                <i class="fa fa-download"></i> {{ translations[lang]['download'] }}
+                                                                            </a>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    
+                                                    <div class="text-center mt-4">
+                                                        <a href="/" class="btn btn-secondary">{{ translations[lang]['back'] }}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Alert Messages -->
+                                {% if error %}
+                                <div class="alert alert-danger alert-dismissible mt-3" role="alert">
+                                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <span>{{ error }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-md mt-4 text-white text-center col-12">
+                    {{ translations[lang]['support'] }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="container">
+            <div class="row g-4 py-5 mt-4">
+                <div class="col-md-4 text-center">
+                    <div class="card border-1 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="bg-primary rounded-circle p-3 d-inline-block mb-3">
+                                <i class="fa fa-download fa-2x text-white"></i>
+                            </div>
+                            <h3 class="h5 mb-2">{{ translations[lang]['instant_download'] }}</h3>
+                            <p class="text-muted mb-0">{{ translations[lang]['instant_download_desc'] }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 text-center">
+                    <div class="card border-1 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="bg-primary rounded-circle p-3 d-inline-block mb-3">
+                                <i class="fa fa-play-circle fa-2x text-white"></i>
+                            </div>
+                            <h3 class="h5 mb-2">{{ translations[lang]['multiple_formats'] }}</h3>
+                            <p class="text-muted mb-0">{{ translations[lang]['multiple_formats_desc'] }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 text-center">
+                    <div class="card border-1 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="bg-primary rounded-circle p-3 d-inline-block mb-3">
+                                <i class="fa fa-magic fa-2x text-white"></i>
+                            </div>
+                            <h3 class="h5 mb-2">{{ translations[lang]['easy_to_use'] }}</h3>
+                            <p class="text-muted mb-0">{{ translations[lang]['easy_to_use_desc'] }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="row py-5 mt-4" id="faq">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="fw-bold mb-4">{{ translations[lang]['faq_title'] }}</h2>
+                </div>
+                <div class="col-lg-12 mx-auto">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq1">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
+                                    {{ translations[lang]['faq1_q'] }}
+                                </button>
+                            </h2>
+                            <div id="faqCollapse1" class="accordion-collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    {{ translations[lang]['faq1_a'] }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
+                                    {{ translations[lang]['faq2_q'] }}
+                                </button>
+                            </h2>
+                            <div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    {{ translations[lang]['faq2_a'] }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq3">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
+                                    {{ translations[lang]['faq3_q'] }}
+                                </button>
+                            </h2>
+                            <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    {{ translations[lang]['faq3_a'] }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq4">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4">
+                                    {{ translations[lang]['faq4_q'] }}
+                                </button>
+                            </h2>
+                            <div id="faqCollapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    {{ translations[lang]['faq4_a'] | safe }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq5">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5">
+                                    {{ translations[lang]['faq5_q'] }}
+                                </button>
+                            </h2>
+                            <div id="faqCollapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    {{ translations[lang]['faq5_a'] }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="row py-5 mt-5 border">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="fw-bold mb-4">{{ translations[lang]['how_it_works'] }}</h2>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="bg-light rounded-circle p-3 d-inline-block mb-3">
+                        <span class="text-primary fw-bold display-6">1</span>
+                    </div>
+                    <h4>{{ translations[lang]['step1_title'] }}</h4>
+                    <p class="text-muted">{{ translations[lang]['step1_desc'] }}</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="bg-light rounded-circle p-3 d-inline-block mb-3">
+                        <span class="text-primary fw-bold display-6">2</span>
+                    </div>
+                    <h4>{{ translations[lang]['step2_title'] }}</h4>
+                    <p class="text-muted">{{ translations[lang]['step2_desc'] }}</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="bg-light rounded-circle p-3 d-inline-block mb-3">
+                        <span class="text-primary fw-bold display-6">3</span>
+                    </div>
+                    <h4>{{ translations[lang]['step3_title'] }}</h4>
+                    <p class="text-muted">{{ translations[lang]['step3_desc'] }}</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="bg-light rounded-circle p-3 d-inline-block mb-3">
+                        <span class="text-primary fw-bold display-6">4</span>
+                    </div>
+                    <h4>{{ translations[lang]['step4_title'] }}</h4>
+                    <p class="text-muted">{{ translations[lang]['step4_desc'] }}</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">{{ translations[lang]['copyright'] }}</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="#" class="text-white">{{ translations[lang]['privacy_policy'] }}</a></li>
+                        <li class="list-inline-item"><a href="#" class="text-white">{{ translations[lang]['terms'] }}</a></li>
+                        <li class="list-inline-item"><a href="#" class="text-white">{{ translations[lang]['contact'] }}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('downloadForm');
+            const loading = document.getElementById('loading');
+            const urlInput = document.getElementById('youtubeUrl');
+            const urlError = document.getElementById('urlError');
+
+            if (form) {
+                function isValidYoutubeUrl(url) {
+                    const patterns = [
+                        /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/,
+                        /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/,
+                        /^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/,
+                        /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/v\/([^?]+)/,
+                        /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([^?]+)/
+                    ];
+                    return patterns.some(pattern => pattern.test(url));
+                }
+
+                form.addEventListener('submit', function (e) {
+                    const url = urlInput.value.trim();
+                    if (!url || !isValidYoutubeUrl(url)) {
+                        e.preventDefault();
+                        urlInput.classList.add('is-invalid');
+                        urlError.textContent = '{{ translations[lang]["url_error"] }}';
+                        urlError.style.display = 'block';
+                    } else {
+                        loading.style.display = 'block';
+                    }
+                });
+
+                urlInput.addEventListener('input', function (e) {
+                    const url = e.target.value.trim();
+                    if (url && !isValidYoutubeUrl(url)) {
+                        urlInput.classList.add('is-invalid');
+                        urlError.textContent = '{{ translations[lang]["url_error"] }}';
+                        urlError.style.display = 'block';
+                    } else {
+                        urlInput.classList.remove('is-invalid');
+                        urlError.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

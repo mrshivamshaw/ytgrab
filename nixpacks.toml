@@ -1,0 +1,24 @@
+[phases.setup]
+nixPkgs = ["ffmpeg", "python39", "python39Packages.pip", "python39Packages.virtualenv"]
+
+[phases.install]
+cmds = [
+  "virtualenv venv",
+  ". venv/bin/activate",
+  "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+  ". venv/bin/activate",
+  "python -m compileall ."
+]
+
+[start]
+cmd = ". venv/bin/activate && python app.py"
+
+[env]
+PYTHONUNBUFFERED = "1"
+
+[nixpkgs]
+channel = "nixos-23.05"
