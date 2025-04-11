@@ -1,17 +1,18 @@
 [phases.setup]
-nixPkgs = ["ffmpeg", "python39", "python39Packages.pip", "python39Packages.virtualenv"]
+nixPkgs = ["ffmpeg", "python313", "python313Packages.pip", "python313Packages.virtualenv"]
 
 [phases.install]
 cmds = [
-  "virtualenv venv",
+  "python -m venv venv",
   ". venv/bin/activate",
+  "pip install --upgrade pip",
   "pip install -r requirements.txt"
 ]
 
 [phases.build]
 cmds = [
   ". venv/bin/activate",
-  "python -m compileall ."
+  "python -c 'import compileall; compileall.compile_dir(\".\", quiet=1)'"
 ]
 
 [start]
@@ -19,6 +20,10 @@ cmd = ". venv/bin/activate && python app.py"
 
 [env]
 PYTHONUNBUFFERED = "1"
+PYTHONPATH = "/app"
+FLASK_APP = "app.py"
+FLASK_ENV = "production"
 
+# Specify a more recent nixpkgs channel to ensure Python 3.13 support
 [nixpkgs]
-channel = "nixos-23.05"
+channel = "unstable"
