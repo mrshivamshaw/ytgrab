@@ -1354,10 +1354,12 @@ def index():
     thumbnail = None
     title = None
     error = None
+    cookies_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookie.json')
 
     if url:
         ydl_opts = {
             'quiet': True,
+            'cookieFile': cookies_file,
             'no_warnings': True,
             'extract_flat': 'in_playlist',
             'timeout': 15,  # Increased timeout
@@ -1471,6 +1473,7 @@ def download(format_id):
     
     temp_dir = tempfile.mkdtemp()
     logger.info(f"Created temp directory: {temp_dir}")
+    cookies_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookie.json')
 
     try:
         # Rotate between different client configurations
@@ -1503,6 +1506,7 @@ def download(format_id):
         fmt_def = format_definitions.get(format_id, format_definitions['720'])
         
         ydl_opts = {
+            'cookieFile': cookies_file,
             'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
             'quiet': False,
             'no_warnings': False,
