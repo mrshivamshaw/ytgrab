@@ -3,6 +3,11 @@ import yt_dlp
 import os
 import time
 import logging
+import tempfile
+import platform
+import io
+import random
+import shutil
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Replace with a secure key (e.g., secrets.token_hex(16))
@@ -10,6 +15,13 @@ app.secret_key = 'your_secret_key_here'  # Replace with a secure key (e.g., secr
 # Set up simple logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('youtube_downloader')
+INVIDIOUS_INSTANCES = [
+    'https://invidious.snopyta.org',
+    'https://yewtu.be',
+    'https://invidious.kavin.rocks',
+    'https://inv.riverside.rocks',
+    'https://invidious.namazso.eu'
+]
 
 # Translation dictionary
 translations = {
@@ -1348,18 +1360,28 @@ def index():
             'quiet': True,
             'no_warnings': True,
             'extract_flat': 'in_playlist',
-            'timeout': 10,
+            'timeout': 15,  # Increased timeout
             'nocheckcertificate': True,
+            'extractor_args': {
+                'youtube': {
+                    'skip': ['dash', 'hls'],  # Skip problematic formats
+                    'player_client': ['android'],
+                    'player_skip': ['webpage'],
+                }
+            },
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'User-Agent': random.choice([
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'com.google.android.youtube/17.36.4 (Linux; U; Android 11)',
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0'
+                ]),
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Sec-Fetch-User': '?1',
-                'Upgrade-Insecure-Requests': '1'
+                'X-YouTube-Client-Name': '1',
+                'X-YouTube-Client-Version': '2.20220801.00.00',
             },
+            'geo_bypass': True,
+            'geo_bypass_country': random.choice(['US', 'GB', 'CA', 'AU', 'DE']),
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -1388,7 +1410,7 @@ def index():
                         if audio_format:
                             formats.append({
                                 'format_id': '140',
-                                'display_name': 'MP3 Audio',
+                                'display_name': 'MP3 Audio (128kbps)',
                                 'download_format': 'mp3',
                                 'filesize': audio_format.get('filesize') or audio_format.get('filesize_approx'),
                                 'height': 'Audio'
@@ -1415,7 +1437,7 @@ def index():
                             best_format = max(matching_formats, key=lambda x: x.get('tbr', 0))
                             formats.append({
                                 'format_id': fmt_def['id'],
-                                'display_name': fmt_def['name'],
+                                'display_name': f"{fmt_def['name']} (~{(best_format.get('filesize') or best_format.get('filesize_approx') or 0)/1024/1024:.1f} MB)",
                                 'download_format': 'mp4',
                                 'filesize': best_format.get('filesize') or best_format.get('filesize_approx'),
                                 'height': best_format.get('height')
@@ -1446,22 +1468,26 @@ def download(format_id):
     url = request.args.get('url')
     if not url:
         return "No URL provided", 400
-    import tempfile
-    import platform
-    import io
-    import random
-    import shutil
-    
     
     temp_dir = tempfile.mkdtemp()
     logger.info(f"Created temp directory: {temp_dir}")
 
     try:
-        user_agent = random.choice([
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        # Rotate between different client configurations
+        client_config = random.choice([
+            {
+                'user_agent': 'com.google.android.youtube/17.36.4 (Linux; U; Android 11)',
+                'client_name': '3',
+                'client_version': '17.36.4',
+                'client': 'android'
+            },
+            {
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'client_name': '1',
+                'client_version': '2.20220801.00.00',
+                'client': 'web'
+            }
         ])
-        logger.info(f"Using user agent: {user_agent}")
 
         is_audio = format_id == '140'
         
@@ -1485,90 +1511,105 @@ def download(format_id):
             'extractor_retries': 3,
             'socket_timeout': 30,
             'nocheckcertificate': True,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': [client_config['client']],
+                    'player_skip': ['webpage', 'configs'],
+                    'skip': ['hls', 'dash'],
+                }
+            },
             'http_headers': {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.5',
-              'Sec-Fetch-Dest': 'document',
-              'Sec-Fetch-Mode': 'navigate',
-              'Sec-Fetch-Site': 'none',
-              'Sec-Fetch-User': '?1',
-              'Upgrade-Insecure-Requests': '1'
-          },
+                'User-Agent': client_config['user_agent'],
+                'X-YouTube-Client-Name': client_config['client_name'],
+                'X-YouTube-Client-Version': client_config['client_version'],
+                'Accept-Language': 'en-US,en;q=0.9',
+            },
+            'geo_bypass': True,
+            'geo_bypass_country': random.choice(['US', 'GB', 'CA', 'AU', 'DE']),
         }
 
         if is_audio:
-            ydl_opts.update({
-                'format': 'bestaudio/best',
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }],
-            })
+          ydl_opts.update({
+              'format': 'bestaudio/best',
+              'postprocessors': [{
+                  'key': 'FFmpegExtractAudio',
+                  'preferredcodec': 'mp3',
+                  'preferredquality': '192',
+              }],
+          })
         else:
-            # Build format query safely
-            format_query = []
-            if fmt_def['max_height'] is not None:
-                format_query.append(f"height<={fmt_def['max_height']}")
-            if fmt_def['vcodec'] is not None:
-                format_query.append(f"vcodec^={fmt_def['vcodec']}")
-            
-            format_query.append('ext=mp4')
-            
-            ydl_opts.update({
-                'format': '+'.join(format_query) + '+bestaudio[ext=m4a]/best',
-                'merge_output_format': 'mp4',
-                'postprocessors': [{
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                }],
-            })
+          # Build format query safely
+          format_query = []
+          if fmt_def['max_height'] is not None:
+              format_query.append(f"height<={fmt_def['max_height']}")
+          if fmt_def['vcodec'] is not None:
+              format_query.append(f"vcodec^={fmt_def['vcodec']}")
+          
+          format_query.append('ext=mp4')
+          
+          ydl_opts.update({
+              'format': '+'.join(format_query) + '+bestaudio[ext=m4a]/best',
+              'merge_output_format': 'mp4',
+              'postprocessors': [{
+                  'key': 'FFmpegVideoConvertor',
+                  'preferedformat': 'mp4',
+              }],
+          })
 
-        # Rest of the download function remains the same...
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
-            
-            if is_audio:
-                file_path = os.path.splitext(filename)[0] + '.mp3'
-            else:
-                file_path = os.path.splitext(filename)[0] + '.mp4'
-                if not os.path.exists(file_path):
-                    file_path = filename  # Fallback
 
+        # Try direct download first
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+        except Exception as e:
+            logger.warning(f"Direct download failed, trying Invidious: {e}")
+            # Fallback to Invidious
+            video_id = url.split('v=')[1].split('&')[0] if 'youtube.com' in url else url.split('/')[-1]
+            invidious_url = f"{random.choice(INVIDIOUS_INSTANCES)}/watch?v={video_id}"
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(invidious_url, download=True)
+
+        filename = ydl.prepare_filename(info)
+        
+        if is_audio:
+            file_path = os.path.splitext(filename)[0] + '.mp3'
+        else:
+            file_path = os.path.splitext(filename)[0] + '.mp4'
             if not os.path.exists(file_path):
-                raise FileNotFoundError(f"Downloaded file not found: {file_path}")
-            
-            file_size = os.path.getsize(file_path)
-            logger.info(f"Downloaded {file_path} ({file_size} bytes)")
+                file_path = filename  # Fallback
 
-            if platform.system() == 'Windows':
-                with open(file_path, 'rb') as f:
-                    file_data = io.BytesIO(f.read())
-                response = send_file(
-                    file_data,
-                    as_attachment=True,
-                    download_name=os.path.basename(file_path),
-                    mimetype='audio/mp3' if is_audio else 'video/mp4'
-                )
-            else:
-                response = send_file(
-                    file_path,
-                    as_attachment=True,
-                    download_name=os.path.basename(file_path),
-                    mimetype='audio/mp3' if is_audio else 'video/mp4'
-                )
-            
-            @response.call_on_close
-            def cleanup():
-                try:
-                    shutil.rmtree(temp_dir)
-                except Exception as e:
-                    logger.warning(f"Cleanup failed: {e}")
-            
-            return response
-            
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Downloaded file not found: {file_path}")
+        
+        file_size = os.path.getsize(file_path)
+        logger.info(f"Downloaded {file_path} ({file_size} bytes)")
+
+        if platform.system() == 'Windows':
+            with open(file_path, 'rb') as f:
+                file_data = io.BytesIO(f.read())
+            response = send_file(
+                file_data,
+                as_attachment=True,
+                download_name=os.path.basename(file_path),
+                mimetype='audio/mp3' if is_audio else 'video/mp4'
+            )
+        else:
+            response = send_file(
+                file_path,
+                as_attachment=True,
+                download_name=os.path.basename(file_path),
+                mimetype='audio/mp3' if is_audio else 'video/mp4'
+            )
+        
+        @response.call_on_close
+        def cleanup():
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as e:
+                logger.warning(f"Cleanup failed: {e}")
+        
+        return response
+        
     except Exception as e:
         logger.error(f"Download failed: {e}")
         try:
